@@ -531,7 +531,7 @@
 
     // 3. Clear Chat / New Conversation
     clearBtn.addEventListener('click', () => {
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      stopSpeaking();
       // Keep only intro card
       chat.innerHTML = `
         <section class="intro" id="intro-card">
@@ -601,20 +601,43 @@
       return english || cachedVoices[0] || null;
     }
 
+    let activeUtterance = null;
+    let isSpeakingActive = false;
+
+    function stopSpeaking() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        // iOS Safari workaround: briefly pause and resume to ensure queue clears
+        if (window.speechSynthesis.pause && window.speechSynthesis.resume) {
+          window.speechSynthesis.pause();
+          window.speechSynthesis.resume();
+          window.speechSynthesis.cancel();
+        }
+      }
+      isSpeakingActive = false;
+      activeUtterance = null;
+      document.querySelectorAll('.listen-btn').forEach(b => {
+        b.dataset.playing = 'false';
+        b.innerHTML = '🔊 Listen';
+      });
+    }
+
     function speakText(rawText, button) {
       if (!('speechSynthesis' in window)) {
         alert('Text-to-speech is not supported on this device/browser.');
         return;
       }
 
-      if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-        document.querySelectorAll('.listen-btn').forEach(b => b.textContent = '🔊 Listen');
-        if (button.dataset.playing === 'true') {
-          button.dataset.playing = 'false';
+      // If user taps the button while playing, stop immediately
+      if (button.dataset.playing === 'true' || isSpeakingActive) {
+        const wasThisPlaying = button.dataset.playing === 'true';
+        stopSpeaking();
+        if (wasThisPlaying) {
           return;
         }
       }
+
+      stopSpeaking();
 
       // Clean markdown characters before speech
       const clean = rawText
@@ -623,22 +646,26 @@
         .trim();
 
       const utterance = new SpeechSynthesisUtterance(clean);
+      activeUtterance = utterance; // Keep reference to prevent iOS garbage collection
       const chosenVoice = getBestVoice();
       if (chosenVoice) {
         utterance.voice = chosenVoice;
       }
       utterance.rate = 0.95; // comfortable pastoral pace
-      utterance.onend = () => {
+
+      const resetBtn = () => {
         button.dataset.playing = 'false';
-        button.textContent = '🔊 Listen';
-      };
-      utterance.onerror = () => {
-        button.dataset.playing = 'false';
-        button.textContent = '🔊 Listen';
+        button.innerHTML = '🔊 Listen';
+        isSpeakingActive = false;
+        activeUtterance = null;
       };
 
+      utterance.onend = resetBtn;
+      utterance.onerror = resetBtn;
+
+      isSpeakingActive = true;
       button.dataset.playing = 'true';
-      button.textContent = '⏹ Stop';
+      button.innerHTML = '⏹ Stop';
       window.speechSynthesis.speak(utterance);
     }
 
@@ -713,7 +740,7 @@
     async function askQuestion(question) {
       if (!question.trim() || sendBtn.disabled) return;
 
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      stopSpeaking();
       addQuestionMessage(question);
       checkAndShowCrisisHelp(question);
 
