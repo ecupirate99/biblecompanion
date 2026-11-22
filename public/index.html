@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#2c3e50" id="meta-theme-color" />
+  <title>Bible Answers</title>
+  <!-- Load Marked and DOMPurify for clean, secure markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --card: #ffffff;
+      --text: #222222;
+      --muted: #5e6d7a;
+      --accent: #2c3e50;
+      --accent-soft: #e8edf2;
+      --border: #d9d4c7;
+      --error: #b03a2e;
+      --error-bg: #fdf2f2;
+      --crisis-bg: #fff8e6;
+      --crisis-border: #f0ad4e;
+      --crisis-text: #8a5300;
+      --input-bg: #ffffff;
+      --header-bg: #2c3e50;
+      --header-text: #ffffff;
+      --btn-text: #ffffff;
+      --focus-ring: #8fa7bf;
+      --quote-bg: #f4efe6;
+      --quote-border: #2c3e50;
+      --action-btn-bg: #f0ede5;
+      --action-btn-text: #37474f;
+      --font-scale: 1rem;
+    }
+
+    [data-theme="dark"] {
+      --bg: #15191e;
+      --card: #1f262e;
+      --text: #e6edf3;
+      --muted: #9aa7b5;
+      --accent: #4a6b8c;
+      --accent-soft: #273342;
+      --border: #323d49;
+      --error: #f85149;
+      --error-bg: #2b1d1d;
+      --crisis-bg: #2a2315;
+      --crisis-border: #d29922;
+      --crisis-text: #e3b341;
+      --input-bg: #192027;
+      --header-bg: #101418;
+      --header-text: #f0f6fc;
+      --btn-text: #ffffff;
+      --focus-ring: #58a6ff;
+      --quote-bg: #242e39;
+      --quote-border: #58a6ff;
+      --action-btn-bg: #273342;
+      --action-btn-text: #c9d1d9;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: var(--font-scale);
+      -webkit-text-size-adjust: 100%;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .header-titles {
+      flex: 1;
+      min-width: 0;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 2px 0 0;
+      font-size: 0.82rem;
+      opacity: 0.85;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--header-text);
+      border-radius: 18px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      touch-action: manipulation;
+      min-height: 38px;
+      min-width: 38px;
+      transition: background 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
+
+    .intro {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      font-size: 0.96rem;
+      line-height: 1.55;
+    }
+
+    .crisis-card {
+      background: var(--crisis-bg);
+      border: 1px solid var(--crisis-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      color: var(--crisis-text);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .crisis-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 1rem;
+    }
+
+    .crisis-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .crisis-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      background: #c53030;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+
+    .crisis-link.secondary {
+      background: rgba(0, 0, 0, 0.1);
+      color: inherit;
+      border: 1px solid currentColor;
+    }
+
+    .message-container {
+      margin-bottom: 16px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      line-height: 1.65;
+      font-size: 1rem;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .message.question {
+      background: var(--accent-soft);
+      border-color: transparent;
+      font-weight: 600;
+    }
+
+    .message.error {
+      border-color: var(--error);
+      background: var(--error-bg);
+      color: var(--error);
+    }
+
+    /* Scripture Blockquote Styling */
+    .message blockquote {
+      margin: 12px 0;
+      padding: 10px 14px;
+      background: var(--quote-bg);
+      border-left: 4px solid var(--quote-border);
+      border-radius: 0 10px 10px 0;
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    .message p {
+      margin: 0 0 10px 0;
+    }
+
+    .message p:last-child {
+      margin-bottom: 0;
+    }
+
+    .message strong {
+      color: var(--accent);
+    }
+
+    [data-theme="dark"] .message strong {
+      color: #79b8ff;
+    }
+
+    /* Action bar for Copy & Listen */
+    .message-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      padding-left: 4px;
+    }
+
+    .msg-action-btn {
+      background: var(--action-btn-bg);
+      border: 1px solid var(--border);
+      color: var(--action-btn-text);
+      border-radius: 14px;
+      padding: 5px 10px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      touch-action: manipulation;
+      min-height: 32px;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .msg-action-btn:hover {
+      background: var(--accent-soft);
+    }
+
+    .msg-action-btn:active {
+      transform: scale(0.96);
+    }
+
+    .loading {
+      color: var(--muted);
+      font-style: italic;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .loading-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--muted);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    footer {
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+      max-width: 760px;
+      margin: 0 auto;
+      align-items: flex-end;
+    }
+
+    textarea {
+      flex: 1;
+      resize: none;
+      background: var(--input-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 16px; /* 16px prevents iOS Safari from auto-zooming */
+      font-family: inherit;
+      min-height: 48px;
+      max-height: 140px;
+      line-height: 1.4;
+      touch-action: manipulation;
+    }
+
+    textarea::placeholder {
+      color: var(--muted);
+      opacity: 0.8;
+    }
+
+    textarea:focus, button:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .send-btn {
+      background: var(--accent);
+      color: var(--btn-text);
+      border: none;
+      border-radius: 12px;
+      padding: 0 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      min-width: 76px;
+      min-height: 48px;
+      height: 48px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: opacity 0.15s ease;
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .footer-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 760px;
+      margin: 4px auto 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 0 2px;
+    }
+
+    .clear-link {
+      color: var(--muted);
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .clear-link:hover {
+      color: var(--text);
+    }
+
+    @media (min-width: 768px) {
+      header h1 { font-size: 1.6rem; }
+      header p { font-size: 0.92rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="header-titles">
+        <h1>Bible Answers</h1>
+        <p>Ask a question about the Bible or Christian living</p>
+      </div>
+      <div class="header-actions">
+        <!-- Font Size Adjuster -->
+        <button class="icon-btn" id="font-btn" type="button" aria-label="Toggle larger font size" title="Change font size">
+          <span style="font-size:1.05rem; font-weight:bold;">A</span><span style="font-size:0.75rem;">+</span>
+        </button>
+        <!-- Theme Toggle -->
+        <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle dark/light mode">
+          <span id="theme-icon" aria-hidden="true">🌙</span>
+          <span id="theme-label" style="display:none;">Dark</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="chat">
+    <section class="intro" id="intro-card">
+      Welcome! Ask any question about the Bible, Jesus, prayer, or living the Christian life.
+      Answers are based on Scripture, quoted in clear modern translations, and written in plain language.
+    </section>
+  </main>
+
+  <footer>
+    <form id="ask-form">
+      <textarea id="question" rows="1" maxlength="500" placeholder="Type your question..."
+        aria-label="Your Bible question" enterkeyhint="send"></textarea>
+      <button type="submit" class="send-btn" id="send">Ask</button>
+    </form>
+    <div class="footer-meta">
+      <button type="button" class="clear-link" id="clear-btn">Clear conversation</button>
+      <div class="counter"><span id="count">0</span>/500</div>
+    </div>
+  </footer>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('ask-form');
+    const input = document.getElementById('question');
+    const sendBtn = document.getElementById('send');
+    const countEl = document.getElementById('count');
+    const themeBtn = document.getElementById('theme-btn');
+    const themeIcon = document.getElementById('theme-icon');
+    const themeLabel = document.getElementById('theme-label');
+    const fontBtn = document.getElementById('font-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const metaThemeColor = document.getElementById('meta-theme-color');
+
+    // 1. Theme Management (Light/Dark + LocalStorage + System Sync)
+    function getPreferredTheme() {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeIcon.textContent = '☀️';
+        themeLabel.textContent = 'Light';
+        if (metaThemeColor) metaThemeColor.setAttribute('content', '#101418');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        themeIcon.textContent = '🌙';
+        themeLabel.textContent = 'Dark';
+        if (metaThemeColor) metaThemeColor.setAttribute('content', '#2c3e50');
+      }
+      localStorage.setItem('theme', theme);
+    }
+
+    applyTheme(getPreferredTheme());
+
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem('theme')) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+
+    // 2. Font Size Toggle (A- / A+)
+    const fontSizes = ['1rem', '1.12rem', '1.24rem'];
+    let fontIndex = parseInt(localStorage.getItem('fontIndex') || '0', 10);
+    if (isNaN(fontIndex) || fontIndex < 0 || fontIndex >= fontSizes.length) fontIndex = 0;
+
+    function applyFontSize(idx) {
+      document.documentElement.style.setProperty('--font-scale', fontSizes[idx]);
+      localStorage.setItem('fontIndex', idx);
+      fontBtn.title = idx === fontSizes.length - 1 ? 'Reset font size' : 'Increase font size';
+    }
+    applyFontSize(fontIndex);
+
+    fontBtn.addEventListener('click', () => {
+      fontIndex = (fontIndex + 1) % fontSizes.length;
+      applyFontSize(fontIndex);
+    });
+
+    // 3. Clear Chat / New Conversation
+    clearBtn.addEventListener('click', () => {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      // Keep only intro card
+      chat.innerHTML = `
+        <section class="intro" id="intro-card">
+          Welcome! Ask any question about the Bible, Jesus, prayer, or living the Christian life.
+          Answers are based on Scripture, quoted in clear modern translations, and written in plain language.
+        </section>
+      `;
+      input.value = '';
+      autoResize();
+      input.focus();
+    });
+
+    // 4. Crisis Intervention Check
+    const crisisPatterns = [
+      /\b(suicide|kill myself|want to die|end my life|harm myself|end it all)\b/i,
+      /\b(hopeless|can't go on|cant go on|no reason to live)\b/i
+    ];
+
+    function checkAndShowCrisisHelp(text) {
+      const isCrisis = crisisPatterns.some(p => p.test(text));
+      if (!isCrisis) return;
+
+      const card = document.createElement('div');
+      card.className = 'crisis-card';
+      card.innerHTML = `
+        <strong>We care about you and you are not alone.</strong>
+        If you are struggling or in immediate distress, please reach out to someone who can help right now:
+        <div class="crisis-links">
+          <a class="crisis-link" href="tel:988">Call or Text 988 (Lifeline)</a>
+          <a class="crisis-link secondary" href="sms:741741?body=HOME">Text HOME to 741741</a>
+        </div>
+      `;
+      chat.appendChild(card);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // 5. Text-to-Speech (Read Aloud) - Edge / Natural Voice preference
+    let cachedVoices = [];
+    function loadVoices() {
+      if (!('speechSynthesis' in window)) return;
+      cachedVoices = window.speechSynthesis.getVoices();
+    }
+    loadVoices();
+    if ('speechSynthesis' in window && window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function getBestVoice() {
+      if (!cachedVoices || cachedVoices.length === 0) {
+        loadVoices();
+      }
+      // 1. First priority: Microsoft Edge Christopher (Natural / Online)
+      const christopher = cachedVoices.find(v => 
+        /Christopher/i.test(v.name) && (/Natural/i.test(v.name) || /Online/i.test(v.name) || /Microsoft/i.test(v.name))
+      ) || cachedVoices.find(v => /Christopher/i.test(v.name));
+
+      if (christopher) return christopher;
+
+      // 2. Second priority: Any Natural English voice (e.g., Guy, Brian, Jenny Natural)
+      const naturalEn = cachedVoices.find(v => 
+        v.lang.startsWith('en') && (/Natural/i.test(v.name) || /Online/i.test(v.name))
+      );
+      if (naturalEn) return naturalEn;
+
+      // 3. Third priority: Any English voice
+      const english = cachedVoices.find(v => v.lang.startsWith('en'));
+      return english || cachedVoices[0] || null;
+    }
+
+    function speakText(rawText, button) {
+      if (!('speechSynthesis' in window)) {
+        alert('Text-to-speech is not supported on this device/browser.');
+        return;
+      }
+
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        document.querySelectorAll('.listen-btn').forEach(b => b.textContent = '🔊 Listen');
+        if (button.dataset.playing === 'true') {
+          button.dataset.playing = 'false';
+          return;
+        }
+      }
+
+      // Clean markdown characters before speech
+      const clean = rawText
+        .replace(/[*_#>`]/g, '')
+        .replace(/Key verses:.*/i, '')
+        .trim();
+
+      const utterance = new SpeechSynthesisUtterance(clean);
+      const chosenVoice = getBestVoice();
+      if (chosenVoice) {
+        utterance.voice = chosenVoice;
+      }
+      utterance.rate = 0.95; // comfortable pastoral pace
+      utterance.onend = () => {
+        button.dataset.playing = 'false';
+        button.textContent = '🔊 Listen';
+      };
+      utterance.onerror = () => {
+        button.dataset.playing = 'false';
+        button.textContent = '🔊 Listen';
+      };
+
+      button.dataset.playing = 'true';
+      button.textContent = '⏹ Stop';
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // 6. Copy Answer to Clipboard
+    async function copyAnswer(text, button) {
+      try {
+        await navigator.clipboard.writeText(text);
+        const originalText = button.innerHTML;
+        button.innerHTML = '✓ Copied!';
+        setTimeout(() => {
+          button.innerHTML = originalText;
+        }, 2000);
+      } catch (err) {
+        console.error('Copy failed:', err);
+      }
+    }
+
+    // 7. Message Elements Helper
+    function addQuestionMessage(text) {
+      const container = document.createElement('div');
+      container.className = 'message-container';
+      const div = document.createElement('div');
+      div.className = 'message question';
+      div.textContent = text;
+      container.appendChild(div);
+      chat.appendChild(container);
+      chat.scrollTop = chat.scrollHeight;
+      return container;
+    }
+
+    function addAnswerMessageContainer() {
+      const container = document.createElement('div');
+      container.className = 'message-container';
+      const div = document.createElement('div');
+      div.className = 'message answer';
+      container.appendChild(div);
+      chat.appendChild(container);
+      chat.scrollTop = chat.scrollHeight;
+      return { container, messageEl: div };
+    }
+
+    function addActionButtons(container, fullText) {
+      const actions = document.createElement('div');
+      actions.className = 'message-actions';
+
+      // Copy Button
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'msg-action-btn copy-btn';
+      copyBtn.innerHTML = '📋 Copy';
+      copyBtn.addEventListener('click', () => copyAnswer(fullText, copyBtn));
+      actions.appendChild(copyBtn);
+
+      // Listen Button
+      const listenBtn = document.createElement('button');
+      listenBtn.type = 'button';
+      listenBtn.className = 'msg-action-btn listen-btn';
+      listenBtn.innerHTML = '🔊 Listen';
+      listenBtn.addEventListener('click', () => speakText(fullText, listenBtn));
+      actions.appendChild(listenBtn);
+
+      container.appendChild(actions);
+    }
+
+    function autoResize() {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+      countEl.textContent = input.value.length;
+    }
+
+    // 8. Ask Question with Streaming (SSE) and Fallback
+    async function askQuestion(question) {
+      if (!question.trim() || sendBtn.disabled) return;
+
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      addQuestionMessage(question);
+      checkAndShowCrisisHelp(question);
+
+      input.value = '';
+      autoResize();
+      sendBtn.disabled = true;
+
+      // Create loading indicator
+      const loadingContainer = document.createElement('div');
+      loadingContainer.className = 'message-container';
+      loadingContainer.innerHTML = `
+        <div class="message loading">
+          <div class="loading-spinner"></div>
+          <span>Looking that up in Scripture...</span>
+        </div>
+      `;
+      chat.appendChild(loadingContainer);
+      chat.scrollTop = chat.scrollHeight;
+
+      let fullRawText = '';
+      let answerContainer = null;
+      let answerMsgEl = null;
+
+      function renderMarkdown(raw) {
+        if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+          return DOMPurify.sanitize(marked.parse(raw));
+        }
+        // Fallback if CDN blocked
+        const escaped = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return escaped.replace(/\n/g, '<br/>');
+      }
+
+      try {
+        const res = await fetch('/api/ask-stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question }),
+        });
+
+        if (!res.ok) {
+          loadingContainer.remove();
+          const errData = await res.json().catch(() => ({}));
+          const errContainer = document.createElement('div');
+          errContainer.className = 'message-container';
+          errContainer.innerHTML = `<div class="message error">${errData.error || 'The answer service is currently unavailable. Please try again soon.'}</div>`;
+          chat.appendChild(errContainer);
+          return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+
+            if (trimmed.startsWith('event: error')) {
+              // will parse next data line as error
+            }
+
+            if (trimmed.startsWith('data:')) {
+              const dataStr = trimmed.slice(5).trim();
+              if (dataStr === '{}' || !dataStr) continue;
+
+              try {
+                const parsed = JSON.parse(dataStr);
+                if (parsed.error) {
+                  loadingContainer.remove();
+                  const errContainer = document.createElement('div');
+                  errContainer.className = 'message-container';
+                  errContainer.innerHTML = `<div class="message error">${parsed.error}</div>`;
+                  chat.appendChild(errContainer);
+                  return;
+                }
+
+                if (parsed.text) {
+                  if (loadingContainer.parentNode) {
+                    loadingContainer.remove();
+                    const created = addAnswerMessageContainer();
+                    answerContainer = created.container;
+                    answerMsgEl = created.messageEl;
+                  }
+                  fullRawText += parsed.text;
+                  answerMsgEl.innerHTML = renderMarkdown(fullRawText);
+                  chat.scrollTop = chat.scrollHeight;
+                }
+              } catch (e) {
+                // ignore stream fragment errors
+              }
+            }
+          }
+        }
+
+        if (loadingContainer.parentNode) loadingContainer.remove();
+
+        if (answerContainer && fullRawText) {
+          addActionButtons(answerContainer, fullRawText);
+        } else if (!fullRawText) {
+          const errContainer = document.createElement('div');
+          errContainer.className = 'message-container';
+          errContainer.innerHTML = `<div class="message error">No answer was received. Please try asking again.</div>`;
+          chat.appendChild(errContainer);
+        }
+
+      } catch (err) {
+        if (loadingContainer.parentNode) loadingContainer.remove();
+        console.error('Fetch error:', err);
+        const errContainer = document.createElement('div');
+        errContainer.className = 'message-container';
+        errContainer.innerHTML = `<div class="message error">Could not connect to the server. Please check your connection and try again.</div>`;
+        chat.appendChild(errContainer);
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+        chat.scrollTop = chat.scrollHeight;
+      }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      askQuestion(input.value);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        askQuestion(input.value);
+      }
+    });
+
+    input.addEventListener('input', autoResize);
+  </script>
+</body>
+</html>
